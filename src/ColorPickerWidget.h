@@ -4,6 +4,7 @@
 
 class ColorPickerWidget: public QWidget {
     Q_OBJECT
+
 public:
     explicit ColorPickerWidget(QWidget* parent = nullptr);
     virtual ~ColorPickerWidget();
@@ -16,6 +17,11 @@ private:
 
     void recalculateGradient();
     void recalculateGradientScanLine(uint8_t* scanLine, double brightness);
+    QPoint ensureInBounds(QPoint s);
+
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
 
     int readR(int colorValue) {
         return colorValue & 0xFF;

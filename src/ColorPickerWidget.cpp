@@ -3,13 +3,22 @@
 #include <QPainter>
 #include <QDebug>
 #include <QImage>
+#include <QMouseEvent>
 
 struct ColorPickerWidget::Private {
+    bool cursorTracking;
+    QPoint mousePos;
+
     QImage img;
     QPixmap pix;
     QSize imgSize;
+    QSize gradientSize;
 
-    Private(): img(1920, 1200, QImage::Format_RGB32) {
+    const int cursorWidth = 10;
+    const int cursorHeight = 10;
+
+    Private(): img(1920, 1200, QImage::Format_RGB32),
+            cursorTracking(false) {
     }
 };
 
@@ -26,11 +35,15 @@ ColorPickerWidget::~ColorPickerWidget() {
 void ColorPickerWidget::paintEvent(QPaintEvent *event) {
     QPainter p(this);
 
-    if(size() != state->imgSize) {
+    if(size() != state->gradientSize) {
         recalculateGradient();
     }
 
     p.drawImage(0, 0, state->img);
+
+    if(state->cursorTracking) {
+        p.fillRect(state->mousePos.x(), state->mousePos.y(), 10, 10, Qt::black);
+    }
 }
 
 inline int getColorForPosition(double position) {
@@ -107,6 +120,8 @@ void ColorPickerWidget::recalculateGradient() {
 
         recalculateGradientScanLine(scanLine, brightness);
     }
+
+    state->gradientSize = size();
 }
 
 void ColorPickerWidget::recalculateGradientScanLine(uint8_t* scanLine,
@@ -122,5 +137,40 @@ void ColorPickerWidget::recalculateGradientScanLine(uint8_t* scanLine,
             adjustBrightness(getColorForPosition(position), brightness);
 
         *reinterpret_cast<int*>(&scanLine[x * 4]) = colorValue;
+    }
+}
+
+QPoint ColorPickerWidget::ensureInBounds(QPoint p) {
+    int x = p.x();
+    if(x < 0)
+        x = 0;
+    else if(x > width() - state->cursorWidth)
+        x = width() - state->cursorWidth;
+
+    int y = p.y();
+    if(y < 0)
+        y = 0;
+    else if(y > height() - state->cursorHeight)
+        y = height() - state->cursorHeight;
+
+    return QPoint(x, y);
+}
+
+void ColorPickerWidget::mousePressEvent(QMouseEvent *event) {
+    state->cursorTracking = true;
+    state->mousePos = ensureInBounds(event->pos());
+    repaint();
+}
+
+void ColorPickerWidget::mouseReleaseEvent(QMouseEvent *event) {
+    state->cursorTracking = false;
+    state->mousePos = ensureInBounds(event->pos());
+    repaint();
+}
+
+void ColorPickerWidget::mouseMoveEvent(QMouseEvent *event) {
+    if(state->cursorTracking) {
+        state->mousePos = ensureInBounds(event->pos());
+        repaint();
     }
 }
