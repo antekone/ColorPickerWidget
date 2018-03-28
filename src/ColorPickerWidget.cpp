@@ -115,7 +115,7 @@ void ColorPickerWidget::recalculateGradientScanLine(uint8_t* scanLine,
     const int xlen = width() > state->img.width() ?
         state->img.width() : width();
 
-    for(int x = 0, xlen = width(); x < xlen; ++x) {
+    for(int x = 0; x < xlen; ++x) {
         const double position = static_cast<double>(x) / xlen;
 
         const int colorValue =
