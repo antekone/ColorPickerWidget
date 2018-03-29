@@ -4,13 +4,13 @@
 #include <QDebug>
 #include <QImage>
 #include <QMouseEvent>
+#include <QApplication>
 
 struct ColorPickerWidget::Private {
     bool cursorTracking;
     QPoint mousePos;
 
     QImage img;
-    QPixmap pix;
     QSize imgSize;
     QSize gradientSize;
 
@@ -40,10 +40,6 @@ void ColorPickerWidget::paintEvent(QPaintEvent *event) {
     }
 
     p.drawImage(0, 0, state->img);
-
-    if(state->cursorTracking) {
-        p.fillRect(state->mousePos.x(), state->mousePos.y(), 10, 10, Qt::black);
-    }
 }
 
 inline int getColorForPosition(double position) {
@@ -157,20 +153,27 @@ QPoint ColorPickerWidget::ensureInBounds(QPoint p) {
 }
 
 void ColorPickerWidget::mousePressEvent(QMouseEvent *event) {
+    QApplication::setOverrideCursor(QCursor(Qt::CrossCursor));
     state->cursorTracking = true;
     state->mousePos = ensureInBounds(event->pos());
-    repaint();
+    pickColor();
 }
 
 void ColorPickerWidget::mouseReleaseEvent(QMouseEvent *event) {
+    QApplication::restoreOverrideCursor();
     state->cursorTracking = false;
     state->mousePos = ensureInBounds(event->pos());
-    repaint();
+    pickColor();
 }
 
 void ColorPickerWidget::mouseMoveEvent(QMouseEvent *event) {
     if(state->cursorTracking) {
         state->mousePos = ensureInBounds(event->pos());
-        repaint();
+        pickColor();
     }
+}
+
+void ColorPickerWidget::pickColor() {
+    QColor col = state->img.pixelColor(state->mousePos);
+    Q_EMIT colorChanged(col);
 }

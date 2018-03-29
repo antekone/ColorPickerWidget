@@ -11,6 +11,9 @@ public:
 
     void paintEvent(QPaintEvent *event) override;
 
+signals:
+    void colorChanged(QColor);
+
 private:
     class Private;
     Private* state;
@@ -18,6 +21,7 @@ private:
     void recalculateGradient();
     void recalculateGradientScanLine(uint8_t* scanLine, double brightness);
     QPoint ensureInBounds(QPoint s);
+    void pickColor();
 
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
